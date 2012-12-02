@@ -4,7 +4,7 @@
 
 #include "FLAME.h"
 
-#define TEST_UNB_VAR1 TRUE
+#define TEST_UNB_VAR1 FALSE
 #define TEST_BLK_VAR1 FALSE
 #define TEST_UNB_VAR2 FALSE
 #define TEST_BLK_VAR2 FALSE
@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
     d_n;
 
   FLA_Obj
-    L, B, Bref, Bold, delta;
+    L, B, C, Cref, Cold, Bref, Bold, delta;
   
   /* Initialize FLAME */
   FLA_Init( );
@@ -61,21 +61,25 @@ int main(int argc, char *argv[])
 
     FLA_Obj_create( FLA_DOUBLE, n, n, 1, n, &L );
     FLA_Obj_create( FLA_DOUBLE, n, n, 1, n, &B );
+
     FLA_Obj_create( FLA_DOUBLE, n, n, 1, n, &C );
     FLA_Obj_create( FLA_DOUBLE, n, n, 1, n, &Cref );
     FLA_Obj_create( FLA_DOUBLE, n, n, 1, n, &Cold );
 
+    FLA_Obj_create( FLA_DOUBLE, n, n, 1, n, &Bref );
+    FLA_Obj_create( FLA_DOUBLE, n, n, 1, n, &Bold );
+
     /* Generate random matrices L and B */
     FLA_Random_matrix( L );
     FLA_Random_matrix( C );
-	FLA_Random_matrix( B );
+    FLA_Random_matrix( B );
     /* Add something large to the diagonal to make sure it isn't nearly singular */
     d_n = ( double ) n;
     *( ( double * ) FLA_Obj_buffer_at_view( delta ) ) = d_n;
 
     FLA_Shift_diag( FLA_NO_CONJUGATE, delta, L );
 
-    FLA_Random_matrix( Bold );
+    FLA_Random_matrix( Cold );
 
     gflops = 1.0 * n * n * n * 1.0e-09;
 
@@ -104,7 +108,6 @@ int main(int argc, char *argv[])
 
     /* Time the your implementations */
 
-
 #if TEST_UNB_VAR1==TRUE
     /* Variant 1 unblocked */
 
@@ -114,7 +117,7 @@ int main(int argc, char *argv[])
     
       dtime = FLA_Clock();
 
-      SLAP_Trmm_llt_var1( L, B, C );
+      SLAP_Trmm_llt_unb_var1( L, B, C );
 
       dtime = FLA_Clock() - dtime;
 
@@ -131,190 +134,14 @@ int main(int argc, char *argv[])
     fflush( stdout );
 #endif
 
-#if TEST_BLK_VAR1==TRUE
-    /* Variant 1 blocked */
-
-    for ( irep=0; irep<nrepeats; irep++ ){
-      FLA_Copy( Bold, B );
-    
-      dtime = FLA_Clock();
-
-      Trsm_blk_var1( L, B, nb_alg );
-
-      dtime = FLA_Clock() - dtime;
-
-      if ( irep == 0 ) 
-	dtime_best = dtime;
-      else
-	dtime_best = ( dtime < dtime_best ? dtime : dtime_best );
-    }
-
-    diff = FLA_Max_elemwise_diff( B, Bref );
-
-    printf( "data_blk_var1( %d, 1:3 ) = [ %d %le  %le];\n", i, n,
-            gflops / dtime_best, diff );
-    fflush( stdout );
-#endif
-
-#if TEST_UNB_VAR2==TRUE
-    /* Variant 2 unblocked */
-
-    for ( irep=0; irep<nrepeats; irep++ ){
-
-      FLA_Copy( Bold, B );
-    
-      dtime = FLA_Clock();
-
-      Trsm_unb_var2( L, B );
-
-      dtime = FLA_Clock() - dtime;
-
-      if ( irep == 0 ) 
-	dtime_best = dtime;
-      else
-	dtime_best = ( dtime < dtime_best ? dtime : dtime_best );
-    }    
-
-    diff = FLA_Max_elemwise_diff( B, Bref );
-
-    printf( "data_unb_var2( %d, 1:3 ) = [ %d %le  %le];\n", i, n,
-            gflops / dtime_best, diff );
-    fflush( stdout );
-#endif
-
-#if TEST_BLK_VAR2==TRUE
-    /* Variant 2 blocked */
-
-    for ( irep=0; irep<nrepeats; irep++ ){
-      FLA_Copy( Bold, B );
-    
-      dtime = FLA_Clock();
-
-      Trsm_blk_var2( L, B, nb_alg );
-
-      dtime = FLA_Clock() - dtime;
-
-      if ( irep == 0 ) 
-	dtime_best = dtime;
-      else
-	dtime_best = ( dtime < dtime_best ? dtime : dtime_best );
-    }
-
-    diff = FLA_Max_elemwise_diff( B, Bref );
-
-    printf( "data_blk_var2( %d, 1:3 ) = [ %d %le  %le];\n", i, n,
-            gflops / dtime_best, diff );
-    fflush( stdout );
-#endif
-
-#if TEST_UNB_VAR3==TRUE
-    /* Variant 3 unblocked */
-
-    for ( irep=0; irep<nrepeats; irep++ ){
-
-      FLA_Copy( Bold, B );
-    
-      dtime = FLA_Clock();
-
-      Trsm_unb_var3( L, B );
-
-      dtime = FLA_Clock() - dtime;
-
-      if ( irep == 0 ) 
-	dtime_best = dtime;
-      else
-	dtime_best = ( dtime < dtime_best ? dtime : dtime_best );
-    }    
-
-    diff = FLA_Max_elemwise_diff( B, Bref );
-
-    printf( "data_unb_var3( %d, 1:3 ) = [ %d %le  %le];\n", i, n,
-            gflops / dtime_best, diff );
-    fflush( stdout );
-#endif
-
-#if TEST_BLK_VAR3==TRUE
-    /* Variant 3 blocked */
-
-    for ( irep=0; irep<nrepeats; irep++ ){
-      FLA_Copy( Bold, B );
-    
-      dtime = FLA_Clock();
-
-      Trsm_blk_var3( L, B, nb_alg );
-
-      dtime = FLA_Clock() - dtime;
-
-      if ( irep == 0 ) 
-	dtime_best = dtime;
-      else
-	dtime_best = ( dtime < dtime_best ? dtime : dtime_best );
-    }
-
-    diff = FLA_Max_elemwise_diff( B, Bref );
-
-    printf( "data_blk_var3( %d, 1:3 ) = [ %d %le  %le];\n", i, n,
-            gflops / dtime_best, diff );
-    fflush( stdout );
-#endif
-
-#if TEST_UNB_VAR4==TRUE
-    /* Variant 4 unblocked */
-
-    for ( irep=0; irep<nrepeats; irep++ ){
-
-      FLA_Copy( Bold, B );
-    
-      dtime = FLA_Clock();
-
-      Trsm_unb_var4( L, B );
-
-      dtime = FLA_Clock() - dtime;
-
-      if ( irep == 0 ) 
-	dtime_best = dtime;
-      else
-	dtime_best = ( dtime < dtime_best ? dtime : dtime_best );
-    }    
-
-    diff = FLA_Max_elemwise_diff( B, Bref );
-
-    printf( "data_unb_var4( %d, 1:3 ) = [ %d %le  %le];\n", i, n,
-            gflops / dtime_best, diff );
-    fflush( stdout );
-#endif
-
-#if TEST_BLK_VAR4==TRUE
-    /* Variant 4 blocked */
-
-    for ( irep=0; irep<nrepeats; irep++ ){
-      FLA_Copy( Bold, B );
-    
-      dtime = FLA_Clock();
-
-      Trsm_blk_var4( L, B, nb_alg );
-
-      dtime = FLA_Clock() - dtime;
-
-      if ( irep == 0 ) 
-	dtime_best = dtime;
-      else
-	dtime_best = ( dtime < dtime_best ? dtime : dtime_best );
-    }
-
-    diff = FLA_Max_elemwise_diff( B, Bref );
-
-    printf( "data_blk_var4( %d, 1:3 ) = [ %d %le  %le];\n", i, n,
-            gflops / dtime_best, diff );
-    fflush( stdout );
-#endif
-
-
-
     FLA_Obj_free( &L );
     FLA_Obj_free( &B );
     FLA_Obj_free( &Bref );
     FLA_Obj_free( &delta );
+ 
+    FLA_Obj_free( &C );
+    FLA_Obj_free( &Cold);
+    FLA_Obj_free( &Cref);
     printf( "\n" );
 
     i++;

@@ -4,7 +4,7 @@
 
 #include "FLAME.h"
 
-#define TEST_UNB_VAR1 FALSE
+#define TEST_UNB_VAR1 TRUE
 #define TEST_BLK_VAR1 FALSE
 #define TEST_UNB_VAR2 FALSE
 #define TEST_BLK_VAR2 FALSE
@@ -71,14 +71,7 @@ int main(int argc, char *argv[])
 
     /* Generate random matrices L and B */
     FLA_Random_matrix( L );
-    FLA_Random_matrix( C );
-    FLA_Random_matrix( B );
-    /* Add something large to the diagonal to make sure it isn't nearly singular */
-    d_n = ( double ) n;
-    *( ( double * ) FLA_Obj_buffer_at_view( delta ) ) = d_n;
-
-    FLA_Shift_diag( FLA_NO_CONJUGATE, delta, L );
-
+    FLA_Random_matrix( Bold );
     FLA_Random_matrix( Cold );
 
     gflops = 1.0 * n * n * n * 1.0e-09;
@@ -87,11 +80,14 @@ int main(int argc, char *argv[])
 
     for ( irep=0; irep<nrepeats; irep++ ){
       FLA_Copy( Bold, Bref );
+      FLA_Copy( Cold, Cref );
 
       dtime = FLA_Clock();
 
-      FLA_Trsm( FLA_LEFT, FLA_LOWER_TRIANGULAR, FLA_NO_TRANSPOSE, FLA_NONUNIT_DIAG,
+      FLA_Trmm( FLA_LEFT, FLA_LOWER_TRIANGULAR, FLA_TRANSPOSE, FLA_NONUNIT_DIAG,
 		FLA_ONE, L, Bref );
+
+      FLA_Axpy( FLA_ONE, Bref, Cref );
 
       dtime = FLA_Clock() - dtime;
 
@@ -113,6 +109,7 @@ int main(int argc, char *argv[])
 
     for ( irep=0; irep<nrepeats; irep++ ){
 
+      FLA_Copy( Bold, B );
       FLA_Copy( Cold, C );
     
       dtime = FLA_Clock();
@@ -127,7 +124,7 @@ int main(int argc, char *argv[])
 	dtime_best = ( dtime < dtime_best ? dtime : dtime_best );
     }    
 
-    diff = FLA_Max_elemwise_diff( B, Bref );
+    diff = FLA_Max_elemwise_diff( C, Cref );
 
     printf( "data_unb_var1( %d, 1:3 ) = [ %d %le  %le];\n", i, n,
             gflops / dtime_best, diff );
@@ -137,7 +134,6 @@ int main(int argc, char *argv[])
     FLA_Obj_free( &L );
     FLA_Obj_free( &B );
     FLA_Obj_free( &Bref );
-    FLA_Obj_free( &delta );
  
     FLA_Obj_free( &C );
     FLA_Obj_free( &Cold);

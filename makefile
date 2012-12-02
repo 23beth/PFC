@@ -39,13 +39,7 @@ FFLAGS     := $(CFLAGS)
 LDFLAGS    := -lm
 
 TEST_OBJS  := driver.o \
-	Trsm_unb_var1.o Trsm_blk_var1.o \
-	Trsm_unb_var2.o Trsm_blk_var2.o \
-	Trsm_unb_var3.o Trsm_blk_var3.o \
-	Trsm_unb_var4.o Trsm_blk_var4.o \
-    SLAP_Trmm_llt_var1.o \
-	SLAP_Trmm_llt_var2.o
-
+              SLAP_Trmm_llt_unb_var1.o 
 $(OBJ_PATH)/%.o: $(SRC_PATH)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 $(OBJ_PATH)/%.o: %.c
